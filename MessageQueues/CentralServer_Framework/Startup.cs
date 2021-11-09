@@ -1,4 +1,5 @@
-﻿using System.Messaging;
+﻿using System.Configuration;
+using System.Messaging;
 using System.Threading;
 using ClassLibrary;
 using ClassLibrary.Models;
@@ -9,7 +10,7 @@ namespace CentralServer_Framework
 	{
 		internal static void Run(string currentDirectory)
 		{
-			string MessageQueueName = @".\private$\MyPrivateQueue";
+			string MessageQueueName = ConfigurationManager.AppSettings["FileDeliveryQueueAddress"];
 
 			DirectoryManager directoryManager = new DirectoryManager(currentDirectory);
 			MessageQueue queue = QueueManager.CreateMQ(MessageQueueName);

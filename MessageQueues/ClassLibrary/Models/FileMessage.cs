@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace ClassLibrary.Models
+﻿namespace ClassLibrary.Models
 {
 	public class FileMessage
 	{

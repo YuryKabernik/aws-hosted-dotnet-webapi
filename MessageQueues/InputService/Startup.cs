@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Configuration;
+using System.IO;
 using System.Messaging;
 using System.Threading;
 using ClassLibrary;
@@ -10,7 +11,7 @@ namespace InputService
 	{
 		internal static void Run(string currentDirectory, string name)
 		{
-			string MessageQueueName = @".\private$\MyPrivateQueue";
+			string MessageQueueName = ConfigurationManager.AppSettings["FileDeliveryQueueAddress"];
 
 			DirectoryManager directoryManager = new DirectoryManager(currentDirectory);
 			MessageQueue queue = QueueManager.CreateMQ(MessageQueueName);
