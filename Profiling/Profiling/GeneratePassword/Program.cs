@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -25,24 +28,32 @@ namespace GeneratePassword
 			}
 
 			Console.WriteLine("Processing started...");
-			string passwordHash = GeneratePasswordHashUsingSalt(password, saltBytes);
+			try
+			{
+				string passwordHash = GeneratePasswordHashUsingSalt(password, saltBytes);
+				Console.WriteLine("Password hash: {0}", passwordHash);
+			}
+			catch (Exception)
+			{
+				Console.WriteLine("Application has run into a problem!!!");
+			}
 
-			Console.WriteLine("Password hash: {0}", passwordHash);
 			Console.ReadKey();
 		}
 
 		public static string GeneratePasswordHashUsingSalt(string passwordText, byte[] salt)
 		{
 			var iterate = 10000;
+			var passwordHash = string.Empty;
 			var pbkdf2 = new Rfc2898DeriveBytes(passwordText, salt, iterate);
 
-			byte[] hash = pbkdf2.GetBytes(20);
-			byte[] hashBytes = new byte[36];
+			using (pbkdf2) // dispose IDisposable object
+			{
+				IEnumerable<byte> hash = pbkdf2.GetBytes(20); // ~49ms here to get bytes + 6 MB memory consumed (view Diagnostics Tool)
+				IEnumerable<byte> hashBytes = Enumerable.Concat(salt, hash); // concat instead of copy
 
-			Array.Copy(salt, 0, hashBytes, 0, 16);
-			Array.Copy(hash, 0, hashBytes, 16, 20);
-
-			var passwordHash = Convert.ToBase64String(hashBytes);
+				passwordHash = Convert.ToBase64String(hashBytes.ToArray());
+			}
 
 			return passwordHash;
 		}
