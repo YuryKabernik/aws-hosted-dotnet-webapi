@@ -9,66 +9,62 @@ using ProfileSample.Models;
 
 namespace ProfileSample.Controllers
 {
-    public class HomeController : Controller
-    {
-        public ActionResult Index()
-        {
-            var context = new ProfileSampleEntities();
+	public class HomeController : Controller
+	{
+		public ActionResult Index()
+		{
+			var model = new List<ImageModel>();
 
-            var sources = context.ImgSources.Take(20).Select(x => x.Id);
-            
-            var model = new List<ImageModel>();
+			using (var context = new ProfileSampleEntities()) // Dispose the entity
+			{
+				// reduce number of database calls
+				model = context.ImgSources.Take(20).Select(x => new ImageModel
+				{
+					Name = x.Name,
+					Data = x.Data
+				})
+				.ToList(); // request execution starts here
+			}
 
-            foreach (var id in sources)
-            {
-                var item = context.ImgSources.Find(id);
+			return View(model);
+		}
 
-                var obj = new ImageModel()
-                {
-                    Name = item.Name,
-                    Data = item.Data
-                };
+		public ActionResult Convert()
+		{
+			var files = Directory.GetFiles(Server.MapPath("~/Content/Img"), "*.jpg");
 
-                model.Add(obj);
-            } 
+			using (var context = new ProfileSampleEntities())
+			{
+				// not sure if parallelization helps here
+				var imgsRange = files
+					.Select(file =>
+					{
+						var img = new ImgSource()
+						{
+							Name = Path.GetFileName(file)
+						};
 
-            return View(model);
-        }
+						using (var stream = new FileStream(file, FileMode.Open))
+						{
+							img.Data = new byte[stream.Length];
+							stream.Read(img.Data, 0, (int)stream.Length);
+						}
 
-        public ActionResult Convert()
-        {
-            var files = Directory.GetFiles(Server.MapPath("~/Content/Img"), "*.jpg");
+						return img;
+					});
 
-            using (var context = new ProfileSampleEntities())
-            {
-                foreach (var file in files)
-                {
-                    using (var stream = new FileStream(file, FileMode.Open))
-                    {
-                        byte[] buff = new byte[stream.Length];
+				context.ImgSources.AddRange(imgsRange); // add range instead of each element
+				context.SaveChanges(); // move saving changes closer to the end of operation to reduce number of calls
+			}
 
-                        stream.Read(buff, 0, (int) stream.Length);
+			return RedirectToAction("Index");
+		}
 
-                        var entity = new ImgSource()
-                        {
-                            Name = Path.GetFileName(file),
-                            Data = buff,
-                        };
+		public ActionResult Contact()
+		{
+			ViewBag.Message = "Your contact page.";
 
-                        context.ImgSources.Add(entity);
-                        context.SaveChanges();
-                    }
-                } 
-            }
-
-            return RedirectToAction("Index");
-        }
-
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
-
-            return View();
-        }
-    }
+			return View();
+		}
+	}
 }
