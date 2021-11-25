@@ -17,17 +17,17 @@ namespace GameOfLife
         public AdWindow(Window owner)
         {
             Random rnd = new Random();
-            Owner = owner;
-            Width = 350;
-            Height = 100;
-            ResizeMode = ResizeMode.NoResize;
-            WindowStyle = WindowStyle.ToolWindow;
-            Title = "Support us by clicking the ads";
-            Cursor = Cursors.Hand;
-            ShowActivated = false;
-            MouseDown += OnClick;
+            this.Owner = owner;
+            this.Width = 350;
+            this.Height = 100;
+            this.ResizeMode = ResizeMode.NoResize;
+            this.WindowStyle = WindowStyle.ToolWindow;
+            this.Title = "Support us by clicking the ads";
+            this.Cursor = Cursors.Hand;
+            this.ShowActivated = false;
+            this.MouseDown += OnClick;
             
-            imgNmb = rnd.Next(1, 3);
+            this.imgNmb = rnd.Next(1, 3);
             ChangeAds(this, new EventArgs());
 
             // Run the timer that changes the ad's image 
@@ -45,7 +45,7 @@ namespace GameOfLife
         
         protected override void OnClosed(EventArgs e)
         {
-            //Unsubscribe();
+            Unsubscribe(); // unsubscribe ads event
             base.OnClosed(e);
         } 
 
