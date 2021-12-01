@@ -13,7 +13,7 @@ namespace JiraProvider
 
 		public JiraDataSet(Expression expression, IQueryProvider provider = null)
 		{
-            this._expression = expression ?? Expression.Empty();
+            this._expression = expression ?? Expression.Constant(this);
             this._queryProvider = provider ?? new Provider("");
 		}
 

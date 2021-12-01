@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
+using JiraProvider.Connection;
 
 /// <summary>
 /// https://docs.microsoft.com/en-us/dotnet/api/system.linq.queryable?view=net-6.0#remarks
@@ -12,11 +9,13 @@ namespace JiraProvider
 {
 	public class Provider : IQueryProvider
 	{
-		private SqlConnectionStringBuilder _builder;
+		private JiraClient _client;
+		private JiraExpressionVisitor _visitor;
 
 		public Provider(string connectionString)
 		{
-			this._builder = new SqlConnectionStringBuilder(connectionString);
+			this._client = new JiraClient(connectionString);
+			this._visitor = new JiraExpressionVisitor();
 		}
 
 		public IQueryable CreateQuery(Expression expression)
@@ -36,45 +35,10 @@ namespace JiraProvider
 
 		public TResult Execute<TResult>(Expression expression) // #2 translates and executes expression tree
 		{
-			string query = this.TranslateToSql(expression);
-			object requestResult = this.RequestData<TResult>(query);
+			string query = this._visitor.TranslateToSql(expression);
+			object requestResult = this._client.RequestData<TResult>(query);
 
 			return (TResult)requestResult;
-		}
-
-		private string TranslateToSql(Expression expression)
-		{
-			return string.Empty;
-		}
-
-		private TResult RequestData<TResult>(string query)
-		{
-			bool isResultEnumerable = typeof(TResult).IsEnum;
-			TResult result = default(TResult);
-
-			using (SqlConnection connection = new SqlConnection(this._builder.ConnectionString))
-			{
-				connection.Open();
-
-				using (SqlCommand command = new SqlCommand(query, connection))
-				{
-					using (SqlDataReader reader = command.ExecuteReader())
-					{
-						while (reader.Read())
-						{
-							if (isResultEnumerable)
-							{
-								
-							} else
-							{
-
-							}
-						}
-					}
-				}
-			}
-
-			return result;
 		}
 	}
 }
