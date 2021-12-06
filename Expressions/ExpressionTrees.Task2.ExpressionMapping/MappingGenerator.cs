@@ -8,12 +8,27 @@ namespace ExpressionTrees.Task2.ExpressionMapping
 {
 	public class MappingGenerator
 	{
+		private IDictionary<MemberInfo, MemberInfo> ConfiguredMemberAssignments { get; set; }
+
+		public MappingGenerator()
+		{
+			this.ConfiguredMemberAssignments = new Dictionary<MemberInfo, MemberInfo>();
+		}
+
 		public Mapper<TSource, TDestination> Generate<TSource, TDestination>()
 		{
 			Expression<Func<TSource, TDestination>> mapFunction =
 				this.CreateInstance<TSource, TDestination>();
 
 			return new Mapper<TSource, TDestination>(mapFunction.Compile());
+		}
+
+		public void Configure<TSource, TDestination>(OptionsBuilder builder)
+		{
+			if (builder.Expressions.Count > 0)
+			{
+				this.ConfiguredMemberAssignments = builder.Expressions;
+			}
 		}
 
 		private Expression<Func<TSource, TDestination>> CreateInstance<TSource, TDestination>()
@@ -28,6 +43,26 @@ namespace ExpressionTrees.Task2.ExpressionMapping
 		{
 			Type destinationType = typeof(TDestination);
 
+			// create assignments
+			IEnumerable<MemberAssignment> memberAssignments = this.GetMemberAssignments(destinationType, sourceParam);
+
+			if (this.ConfiguredMemberAssignments.Count > 0)
+			{
+				IEnumerable<MemberAssignment> configuredMemberAssignments = this.ConfiguredMemberAssignments.Select(cfg =>
+				{
+					MemberExpression memberValue = Expression.MakeMemberAccess(sourceParam, cfg.Key);
+
+					return Expression.Bind(cfg.Value, memberValue);
+				});
+
+				memberAssignments = memberAssignments.Concat(configuredMemberAssignments);
+			}
+
+			return Expression.MemberInit(Expression.New(destinationType), memberAssignments.ToList());
+		}
+
+		private IEnumerable<MemberAssignment> GetMemberAssignments(Type destinationType, ParameterExpression sourceParam)
+		{
 			PropertyInfo[] sourceProperties = sourceParam.Type.GetProperties();
 			PropertyInfo[] destinationProperties = destinationType.GetProperties();
 
@@ -40,8 +75,7 @@ namespace ExpressionTrees.Task2.ExpressionMapping
 				)
 			);
 
-			// create assignments
-			IEnumerable<MemberAssignment> memberAssignments = destinationPropertiesToMap
+			return destinationPropertiesToMap
 				.Select(destination =>
 				{
 					PropertyInfo source = sourceProperties.First(s => s.Name == destination.Name);
@@ -50,8 +84,6 @@ namespace ExpressionTrees.Task2.ExpressionMapping
 					return Expression.Bind(destination, memberValue);
 				}
 			);
-
-			return Expression.MemberInit(Expression.New(destinationType), memberAssignments.ToList());
 		}
 	}
 }
