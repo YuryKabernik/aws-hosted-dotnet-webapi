@@ -1,3 +1,5 @@
+using Amazon.Util;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,13 +10,8 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 var summaries = new[]
 {
@@ -23,7 +20,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -36,9 +33,16 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
+app.MapGet("/availability-zone/current", () => new InstanceResidenceDetails(
+    EC2InstanceMetadata.Region?.DisplayName ?? "Not Available",
+    EC2InstanceMetadata.AvailabilityZone ?? "Not Available"
+));
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+
+record InstanceResidenceDetails(string Region, string AvailabilityZone);
