@@ -1,0 +1,6 @@
+@dotnet_intermediate_mentoring_program_HostAddress = http://localhost:5198
+
+GET {{dotnet_intermediate_mentoring_program_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
