@@ -2,8 +2,11 @@ using Amazon.Util;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.WebHost.UseKestrel();
+builder.WebHost.ConfigureKestrel((context, serverOptions) =>
+    serverOptions.Configure(context.Configuration.GetSection("Kestrel"))
+);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -33,10 +36,12 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-app.MapGet("/availability-zone/current", () => new InstanceResidenceDetails(
+app.MapGet("/instance/current", () => new InstanceResidenceDetails(
     EC2InstanceMetadata.Region?.DisplayName ?? "Not Available",
     EC2InstanceMetadata.AvailabilityZone ?? "Not Available"
-));
+))
+.WithName("GetInstanceLocation")
+.WithOpenApi();
 
 app.Run();
 
