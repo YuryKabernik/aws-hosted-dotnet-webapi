@@ -3,8 +3,6 @@
 
 profile=$1
 
-path="dynamic-app"
+dotnet publish -c Release
 
-dotnet publish -c Release --artifacts-path $path
-
-aws s3 sync "./$path/publish/dotnet-intermediate-mentoring-program/release" s3://s3-dotnet-webapi/ --profile $profile
+aws s3 sync "./bin/Release/net8.0/publish" s3://s3-dotnet-webapi/ --profile $profile

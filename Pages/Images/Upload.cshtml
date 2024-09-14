@@ -1,0 +1,17 @@
+﻿@page "/images/upload"
+
+@addTagHelper * , Microsoft.AspNetCore.Mvc.TagHelpers
+@model dotnet_intermediate_mentoring_program.Pages.Images.UploadModel
+
+<form enctype="multipart/form-data" method="post">
+    <dl>
+        <dt>
+            <label asp-for="FormFile"></label>
+        </dt>
+        <dd>
+            <input asp-for="FormFile" type="file" />
+            <span asp-validation-for="FormFile"></span>
+        </dd>
+    </dl>
+    <input asp-page-handler="Upload" class="btn" type="submit" value="Upload" />
+</form>

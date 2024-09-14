@@ -15,7 +15,9 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "AWS_PROFILE": "S3FullAccess",
+        "PGPASSWORD": "Mwb5KIdk4igOpUlpbsCV"
       }
     },
     "https": {
