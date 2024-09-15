@@ -1,0 +1,338 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: A template for CloudX training
+
+Parameters:
+  MyIpParameter:
+    Type: String
+    Description: Your local IP address to connect to EC2 via SSH
+    Default: 195.56.119.209/32
+    AllowedValues:
+      - 188.123.143.113/32
+      - 195.56.119.209/32
+
+  AmiIdParameter:
+    Type: String
+    Description: The previosly created AMI with dotnet WebAPI setup
+    Default: "ami-0a889b2ffe3e03a09"
+
+  InstanceTypeParameter:
+    Type: String
+    Description: The instance type to run the selected AMI
+    Default: "t2.micro"
+
+  KeyPairIdParameter:
+    Type: String
+    Description: The Key Pair name required to connect to the instance
+    Default: AWS-UserGuide-Key
+  
+  InstanceProfileArnParameter:
+    Type: String
+    Description: The ARN of an instance profile to use with EC2 instances
+    Default: arn:aws:iam::905418123070:instance-profile/CloudX-FullAccessRoleS3
+
+Resources:
+  # S3 Setup
+  S3BucketYury:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: s3-cloudx-images-store
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  # VPC Setup
+  VPCYury:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-Network
+        - Key: project
+          Value: cloudx
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-InternetGateway
+        - Key: project
+          Value: cloudx
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPCYury
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnetAYury:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCYury
+      CidrBlock: 10.0.11.0/24
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PublicSubnet-A
+        - Key: project
+          Value: cloudx
+
+  PublicSubnetBYury:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCYury
+      CidrBlock: 10.0.12.0/24
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PublicSubnet-B
+        - Key: project
+          Value: cloudx
+
+  PrivateSubnetAYury:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCYury
+      CidrBlock: 10.0.13.0/24
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PrivateSubnet-A
+        - Key: project
+          Value: cloudx
+
+  PrivateSubnetBYury:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCYury
+      CidrBlock: 10.0.14.0/24
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PrivateSubnet-B
+        - Key: project
+          Value: cloudx
+
+  # Public Subnet Routing Setup
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCYury
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PublicRouteTable
+        - Key: project
+          Value: cloudx
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      GatewayId: !Ref InternetGateway
+      DestinationCidrBlock: 0.0.0.0/0
+
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetAYury
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetBYury
+      RouteTableId: !Ref PublicRouteTable
+
+  # Security Group Setup - EC2
+
+  SecurityGroupEC2Access:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCYury
+      GroupName: dotnet-webapi-SecGr1
+      GroupDescription: Public access to EC2 instances
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  SecurityGroupIngressHttpsYury:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 0.0.0.0/0
+      GroupId: !Ref SecurityGroupEC2Access
+
+  SecurityGroupIngressHttpYury:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+      GroupId: !Ref SecurityGroupEC2Access
+
+  SecurityGroupIngressSshYury:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: !Ref MyIpParameter
+      GroupId: !Ref SecurityGroupEC2Access
+
+  # Security Group Setup - RDS
+
+  SecurityGroupRDSAccess:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCYury
+      GroupName: dotnet-webapi-SecGrRds
+      GroupDescription: Private access to RDS instances
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  SecurityGroupIngressPostgreSql:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref SecurityGroupEC2Access
+      GroupId: !Ref SecurityGroupRDSAccess
+
+  # EC2 Launch Template
+  EC2LaunchTemplateWebApi:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: "dotnet-webapi-LaunchTemplate"
+      LaunchTemplateData:
+        ImageId: !Ref AmiIdParameter
+        InstanceType: !Ref InstanceTypeParameter
+        KeyName: !Ref KeyPairIdParameter
+        IamInstanceProfile:
+          Arn: !Ref InstanceProfileArnParameter
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociatePublicIpAddress: true
+            Groups:
+              - !Ref SecurityGroupEC2Access
+
+  # EC2 Auto Scaling Group
+  AutoScalingGroupYury:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      AutoScalingGroupName: dotnet-webapi-AutoScalingGroup
+      DefaultInstanceWarmup: 90
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2LaunchTemplateWebApi
+        Version: !GetAtt EC2LaunchTemplateWebApi.LatestVersionNumber
+      VPCZoneIdentifier:
+        - !Ref PublicSubnetAYury
+        - !Ref PublicSubnetBYury
+      TargetGroupARNs:
+        - !Ref TargetGroupWebApi
+      MaxSize: "3"
+      MinSize: "1"
+      DesiredCapacity: "2"
+
+  CpuUsageScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroupYury
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 50
+
+  # EC2 Application Load Balancer
+
+  ApplicationLoadBalancerYury:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn: InternetGateway
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      Name: dotnet-webapi-LoadBalancer
+      SecurityGroups:
+        - !Ref SecurityGroupEC2Access
+      Subnets:
+        - !Ref PublicSubnetAYury
+        - !Ref PublicSubnetBYury
+
+  ListenerWebApi:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupWebApi
+      LoadBalancerArn: !Ref ApplicationLoadBalancerYury
+
+  TargetGroupWebApi:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPCYury
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: "80"
+      HealthyThresholdCount: 4
+      Protocol: HTTP
+      Port: 80
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-TargetGroup
+        - Key: project
+          Value: cloudx
+
+  # DB Subnet Group
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: A group describing all subnets for BD instance allocation
+      SubnetIds:
+        - !Ref PrivateSubnetAYury
+        - !Ref PrivateSubnetBYury
+      Tags:
+        - Key: Name
+          Value: dotnet-DbSubnetGroup
+
+  # DB Instance
+
+  DataBaseImages:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: ImagesMetadata
+      DBInstanceClass: db.t4g.micro
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      Engine: postgres
+      StorageType: gp3
+      AllocatedStorage: "20"
+      DBInstanceIdentifier: database-1
+      MasterUsername: postgres
+      MasterUserPassword: Mwb5KIdk4igOpUlpbsCV
+      AutoMinorVersionUpgrade: false
+      MultiAZ: false
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+      VPCSecurityGroups:
+        - !Ref SecurityGroupRDSAccess
