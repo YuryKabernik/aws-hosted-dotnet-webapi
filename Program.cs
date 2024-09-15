@@ -26,22 +26,6 @@ builder.Services.AddAWSService<IAmazonS3>();
 builder.Services
     .AddNpgsql<ImagesDbContext>(
         builder.Configuration.GetConnectionString("Postgres")
-        // optionsBuilder => optionsBuilder.ProvidePasswordCallback(
-        //     (host, port, _, username) =>
-        //     {
-        //         var awsOptions = builder.Configuration.GetAWSOptions("AWS");
-        //         var credentialProfileStoreChain = new CredentialProfileStoreChain();
-        //
-        //         if (credentialProfileStoreChain.TryGetAWSCredentials(awsOptions.Profile,
-        //                 out AWSCredentials awsCredentials))
-        //         {
-        //             return RDSAuthTokenGenerator.GenerateAuthToken(
-        //                 awsCredentials, awsOptions.Region, host, port, username);
-        //         }
-        //         
-        //         return RDSAuthTokenGenerator.GenerateAuthToken(awsOptions.Region, host, port, username);
-        //     }
-        // )
     );
 
 var app = builder.Build();

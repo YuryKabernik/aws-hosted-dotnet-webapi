@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\" />
+    <Folder Include="aws/" />
     <Folder Include="HostInstance/" />
     <Folder Include="Migrations\" />
   </ItemGroup>
