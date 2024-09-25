@@ -7,15 +7,11 @@ Parameters:
     Type: String
     Description: Your local IP address to connect to EC2 via SSH
     Default: 178.134.165.50/32
-    AllowedValues:
-      - 188.123.143.113/32
-      - 195.56.119.209/32
-      - 178.134.165.50/32
 
   AmiIdParameter:
     Type: String
-    Description: The previosly created AMI with dotnet WebAPI setup
-    Default: ami-06230d29d645cb738
+    Description: The previously created AMI with dotnet WebAPI setup
+    Default: ami-0a1f46bcdfcb04528
 
   InstanceTypeParameter:
     Type: String
@@ -48,6 +44,8 @@ Resources:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
       Tags:
         - Key: Name
           Value: dotnet-webapi-Network
@@ -156,6 +154,36 @@ Resources:
       SubnetId: !Ref PublicSubnetBYury
       RouteTableId: !Ref PublicRouteTable
 
+  # # Private Subnet Routing Setup
+  # PrivateRouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref VPCYury
+  #     Tags:
+  #       - Key: Name
+  #         Value: dotnet-webapi-PrivateRouteTable
+  #       - Key: project
+  #         Value: cloudx
+
+  # PrivateRoute:
+  #   Type: AWS::EC2::Route
+  #   DependsOn: InternetGatewayAttachment
+  #   Properties:
+  #     RouteTableId: !Ref PrivateRouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+
+  # PrivateSubnetARouteTableAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     SubnetId: !Ref PrivateSubnetAYury
+  #     RouteTableId: !Ref PrivateRouteTable
+
+  # PrivateSubnetBRouteTableAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     SubnetId: !Ref PrivateSubnetBYury
+  #     RouteTableId: !Ref PrivateRouteTable
+
   # Security Group Setup - EC2
 
   SecurityGroupEC2Access:
@@ -207,7 +235,7 @@ Resources:
         - Key: project
           Value: cloudx
 
-  SecurityGroupIngressPostgreSql:
+  SecurityGroupIngressPostgresSql:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       IpProtocol: tcp
@@ -216,6 +244,15 @@ Resources:
       SourceSecurityGroupId: !Ref SecurityGroupEC2Access
       GroupId: !Ref SecurityGroupRDSAccess
 
+  SecurityGroupIngressPostgresSqlYury:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      CidrIp: !Ref MyIpParameter
+      GroupId: !Ref SecurityGroupRDSAccess
+      
   # EC2 Launch Template
   EC2LaunchTemplateWebApi:
     Type: AWS::EC2::LaunchTemplate
@@ -250,7 +287,7 @@ Resources:
         - !Ref TargetGroupWebApi
       MaxSize: '3'
       MinSize: '1'
-      DesiredCapacity: '2'
+      DesiredCapacity: '1'
 
   CpuUsageScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -335,6 +372,7 @@ Resources:
       MasterUsername: postgres
       MasterUserPassword: Mwb5KIdk4igOpUlpbsCV
       AutoMinorVersionUpgrade: false
+      PubliclyAccessible: true
       MultiAZ: false
       AvailabilityZone: !Select
         - 0

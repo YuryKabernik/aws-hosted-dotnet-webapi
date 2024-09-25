@@ -8,10 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="3.7.400.18" />
+    <PackageReference Include="AWSSDK.Core" Version="3.7.400.22" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.301" />
-    <PackageReference Include="AWSSDK.RDS" Version="3.7.401.16" />
-    <PackageReference Include="AWSSDK.S3" Version="3.7.402.8" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
@@ -31,24 +29,12 @@
   <ItemGroup>
     <Folder Include="aws/" />
     <Folder Include="HostInstance/" />
-    <Folder Include="Migrations\" />
+    <Folder Include="Options/" />
   </ItemGroup>
 
   <ItemGroup>
-    <_ContentIncludedByDefault Remove="dynamic-app\publish\dotnet-intermediate-mentoring-program\release\web.config" />
-    <_ContentIncludedByDefault Remove="dynamic-app\bin\dotnet-intermediate-mentoring-program\release\appsettings.Development.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\bin\dotnet-intermediate-mentoring-program\release\appsettings.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\bin\dotnet-intermediate-mentoring-program\release\dotnet-intermediate-mentoring-program.deps.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\bin\dotnet-intermediate-mentoring-program\release\dotnet-intermediate-mentoring-program.runtimeconfig.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\obj\dotnet-intermediate-mentoring-program\dotnet-intermediate-mentoring-program.csproj.nuget.dgspec.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\obj\dotnet-intermediate-mentoring-program\project.assets.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\obj\dotnet-intermediate-mentoring-program\release\dotnet-intermediate-mentoring-program.deps.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\obj\dotnet-intermediate-mentoring-program\release\staticwebassets.build.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\obj\dotnet-intermediate-mentoring-program\release\staticwebassets.publish.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\publish\dotnet-intermediate-mentoring-program\release\appsettings.Development.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\publish\dotnet-intermediate-mentoring-program\release\appsettings.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\publish\dotnet-intermediate-mentoring-program\release\dotnet-intermediate-mentoring-program.deps.json" />
-    <_ContentIncludedByDefault Remove="dynamic-app\publish\dotnet-intermediate-mentoring-program\release\dotnet-intermediate-mentoring-program.runtimeconfig.json" />
+    <ProjectReference Include="..\AsyncMessaging\AsyncMessaging.csproj" />
+    <ProjectReference Include="..\UseCases\UseCases.csproj" />
   </ItemGroup>
 
 </Project>
