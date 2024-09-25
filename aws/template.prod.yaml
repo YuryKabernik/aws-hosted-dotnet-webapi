@@ -347,7 +347,7 @@ Resources:
   QueueInstance:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: dotnet-webapi--UploadsNotificationQueue
+      QueueName: dotnet-webapi-UploadsNotificationQueue
       Tags:
         - Key: project
           Value: cloudx

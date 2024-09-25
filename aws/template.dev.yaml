@@ -6,12 +6,12 @@ Parameters:
   MyIpParameter:
     Type: String
     Description: Your local IP address to connect to EC2 via SSH
-    Default: 178.134.165.50/32
+    Default: 188.123.143.113/32
 
   AmiIdParameter:
     Type: String
     Description: The previously created AMI with dotnet WebAPI setup
-    Default: ami-0a1f46bcdfcb04528
+    Default: ami-0376cd35f8dc4c616
 
   InstanceTypeParameter:
     Type: String
@@ -385,7 +385,7 @@ Resources:
   QueueInstance:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: dotnet-webapi--UploadsNotificationQueue
+      QueueName: dotnet-webapi-UploadsNotificationQueue
       Tags:
         - Key: project
           Value: cloudx
