@@ -21,15 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Properties\launchSettings.json" />
     <None Update="kestrel-webapi.service">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="aws/" />
-    <Folder Include="HostInstance/" />
-    <Folder Include="Options/" />
   </ItemGroup>
 
   <ItemGroup>
