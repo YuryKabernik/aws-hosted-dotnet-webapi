@@ -33,13 +33,14 @@ public class EmailNotificationService(
     public async Task UnsubscribeAsync(string email, CancellationToken cancellationToken)
     {
         string topicArn = await this.GetTopicArnAsync(cancellationToken);
-        var topicResponse = await notificationService.ListSubscriptionsByTopicAsync(topicArn);
+        var topicResponse = await notificationService.ListSubscriptionsByTopicAsync(topicArn, cancellationToken);
 
         Subscription subscription = topicResponse.Subscriptions
             .Single(s => s.Endpoint.Equals(email, StringComparison.InvariantCultureIgnoreCase));
 
         UnsubscribeRequest request = new UnsubscribeRequest(subscription.SubscriptionArn);
-        UnsubscribeResponse unsubscribeResponse = await notificationService.UnsubscribeAsync(request, cancellationToken);
+        UnsubscribeResponse unsubscribeResponse =
+            await notificationService.UnsubscribeAsync(request, cancellationToken);
     }
 
     public async Task PushNotificationAsync(EmailNotificationMessage message, CancellationToken cancellationToken)
@@ -56,19 +57,29 @@ public class EmailNotificationService(
         var metadata = message.Metadata;
 
         return $"""
-            Please be informed that a new image was uploaded to the bucket.
-             - Name: {metadata.Name}
-             - Extension: {metadata.Extension}
-             - Size: {metadata.Size}
-             - Last Modified: {metadata.LastUpdate}
-            
-            Image could be downloaded by the link: {link}.
-        """;
+                    Please be informed that a new image was uploaded to the bucket.
+                     - Name: {metadata.Name}
+                     - Extension: {metadata.Extension}
+                     - Size: {metadata.Size}
+                     - Last Modified: {metadata.LastUpdate}
+                    
+                    Image could be downloaded by the link: {link}.
+                """;
     }
 
     private async Task<string> GetTopicArnAsync(CancellationToken cancellationToken)
     {
-        CreateTopicRequest request = new(this._snsTopic.Name);
+        if (this._snsTopic.ArnName is not null)
+        {
+            return this._snsTopic.ArnName;
+        }
+
+        return await this.GetOrCreateTopic(cancellationToken);
+    }
+
+    private async Task<string> GetOrCreateTopic(CancellationToken cancellationToken)
+    {
+        CreateTopicRequest request = new CreateTopicRequest(this._snsTopic.Name);
         CreateTopicResponse response = await notificationService.CreateTopicAsync(request, cancellationToken);
 
         return response.TopicArn;
