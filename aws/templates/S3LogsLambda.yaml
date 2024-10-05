@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A template for CloudX training
+
+Parameters:
+  BucketNameParameter:
+    Type: String
+    Default: s3-cloudx-images-store
+
+  LambdaS3LoggerRoleParameter:
+    Type: String
+    Description: Allows Lambda functions to call RDS and S3 services to synchronize images and metadata
+    Default: arn:aws:iam::905418123070:role/CloudX-S3LoggerRole
+
+Resources:
+  # Permissions
+  AllowS3ToCallLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaS3LogsFunction.Arn
+      Principal: "s3.amazonaws.com"
+      SourceArn: !GetAtt S3Bucket.Arn
+
+  # S3 bucket
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Ref BucketNameParameter
+      # NotificationConfiguration:
+      #   LambdaConfigurations:
+      #     - Function: !GetAtt LambdaS3LogsFunction.Arn
+      #       Event: s3:ObjectCreated:Put
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  # Lambda function
+  LambdaS3LogsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: dotnet-webapi-S3LogsFunction
+      Role: !Ref LambdaS3LoggerRoleParameter
+      Runtime: dotnet8
+      MemorySize: 512
+      Timeout: 30
+      PackageType: Zip
+      Handler: S3LogsFunction
+      Code:
+        S3Bucket: s3-dotnet-webapi-functions
+        S3Key: S3LogsFunction.zip
+      TracingConfig:
+        Mode: Active
