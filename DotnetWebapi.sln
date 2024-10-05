@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LambdaSnsSqsNotification", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataConsistencyFunction", "DataConsistencyFunction\DataConsistencyFunction.csproj", "{D0E3122B-EE47-4C4D-AB82-D06E6633D3FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S3LogsFunction", "S3LogsFunction\S3LogsFunction.csproj", "{C9678709-3BFE-4D44-AEDC-B56B1656407E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{D0E3122B-EE47-4C4D-AB82-D06E6633D3FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0E3122B-EE47-4C4D-AB82-D06E6633D3FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0E3122B-EE47-4C4D-AB82-D06E6633D3FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9678709-3BFE-4D44-AEDC-B56B1656407E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9678709-3BFE-4D44-AEDC-B56B1656407E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9678709-3BFE-4D44-AEDC-B56B1656407E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9678709-3BFE-4D44-AEDC-B56B1656407E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
