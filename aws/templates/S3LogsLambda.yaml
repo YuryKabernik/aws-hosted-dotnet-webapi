@@ -13,29 +13,33 @@ Parameters:
 
 Resources:
   # Permissions
+
   AllowS3ToCallLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt LambdaS3LogsFunction.Arn
       Principal: "s3.amazonaws.com"
-      SourceArn: !GetAtt S3Bucket.Arn
+      SourceArn: !Sub "arn:aws:s3:::${BucketNameParameter}"
 
   # S3 bucket
+
   S3Bucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
+    DependsOn: AllowS3ToCallLambdaPermission
     Properties:
       BucketName: !Ref BucketNameParameter
-      # NotificationConfiguration:
-      #   LambdaConfigurations:
-      #     - Function: !GetAtt LambdaS3LogsFunction.Arn
-      #       Event: s3:ObjectCreated:Put
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Function: !GetAtt LambdaS3LogsFunction.Arn
+            Event: s3:ObjectCreated:Put
       Tags:
         - Key: project
           Value: cloudx
-
+  
   # Lambda function
+
   LambdaS3LogsFunction:
     Type: AWS::Lambda::Function
     Properties:
