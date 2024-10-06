@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: A template for CloudX training
+
+Parameters:
+  
+  LambdaNotificatorRoleParameter:
+    Type: String
+    Description: Allows Lambda functions to call SQS and SNS services
+    Default: arn:aws:iam::905418123070:role/CloudX-LambdaNotificatorRole
+
+Resources:
+  # Simple Queue Service
+
+  UploadsNotificationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: dotnet-webapi-UploadsNotificationQueue
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  # Simple Notification Service
+
+  UploadsNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "CloudX SNS Upload"
+      TopicName: dotnet-webapi-UploadsNotificationTopic
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  # Lambda Function
+
+  LambdaUploadsNotificationFunction:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - UploadsNotificationQueue
+      - UploadsNotificationTopic
+    Properties:
+      FunctionName: dotnet-webapi-UploadsNotificationFunction
+      Role: !Ref LambdaNotificatorRoleParameter
+      Runtime: dotnet8
+      MemorySize: 512
+      Timeout: 30
+      PackageType: Zip
+      Handler: LambdaSnsSqsNotification
+      Code:
+        S3Bucket: s3-dotnet-webapi-functions
+        S3Key: UploadsNotificationFunction.zip
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref UploadsNotificationTopic
+      TracingConfig:
+        Mode: Active
+
+  LambdaUploadsNotificationFunctionEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !GetAtt LambdaUploadsNotificationFunction.Arn
+      EventSourceArn: !GetAtt UploadsNotificationQueue.Arn
+      BatchSize: 10
+      MaximumBatchingWindowInSeconds: 50
