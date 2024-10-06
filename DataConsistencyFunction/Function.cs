@@ -18,7 +18,7 @@ var connectionString =
     Environment.GetEnvironmentVariable("Postgres") ??
     throw new InvalidOperationException("Connection string to the Postgres database can't be found.");
 
-await using var dataSource = NpgsqlDataSource.Create(connectionString);
+var dataSource = NpgsqlDataSource.Create(connectionString);
 
 // Ensure table created
 await using var cmd = dataSource.CreateCommand(SqlCommands.CreateIfNotExists);

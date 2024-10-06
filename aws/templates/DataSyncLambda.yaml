@@ -43,7 +43,7 @@ Resources:
     Properties:
       VpcId: !Ref VPCYury
       CidrBlock: 10.0.13.0/24
-      AvailabilityZone: !Select 
+      AvailabilityZone: !Select
         - 0
         - !GetAZs ""
       Tags:
@@ -208,3 +208,24 @@ Resources:
         SubnetIds:
           - !Ref PrivateSubnetAYury
           - !Ref PrivateSubnetBYury
+
+  # Event Run Every 5 Minutes
+  DataConsistencyCheckEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: ScheduledConsistencyCheckRule
+      ScheduleExpression: "rate(5 minutes)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt LambdaDataConsistencyFunction.Arn
+          Id: !Ref LambdaDataConsistencyFunction
+
+  # Permissions
+
+  AllowInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaDataConsistencyFunction.Arn
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt DataConsistencyCheckEventRule.Arn
