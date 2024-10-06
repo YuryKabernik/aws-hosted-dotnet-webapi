@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 
 Description: A template for CloudX training
 
@@ -11,7 +11,7 @@ Parameters:
   AmiIdParameter:
     Type: String
     Description: The previously created AMI with dotnet WebAPI setup
-    Default: ami-0376cd35f8dc4c616
+    Default: ami-028eed826eea4fac2
 
   InstanceTypeParameter:
     Type: String
@@ -28,13 +28,46 @@ Parameters:
     Description: The ARN of an instance profile to use with EC2 instances
     Default: arn:aws:iam::905418123070:instance-profile/CloudX-FullAccessRoleS3
 
+  BucketNameParameter:
+    Type: String
+    Default: s3-cloudx-images-store
+
+  DatabaseUserNameParameter:
+    Type: String
+    Description: PostgreSQL username for database connection.
+    Default: postgres
+
+  DatabaseUserPasswordParameter:
+    Type: String
+    Description: PostgreSQL password for database connection.
+    Default: Mwb5KIdk4igOpUlpbsCV
+
+  LambdaNotificatorRoleParameter:
+    Type: String
+    Description: Allows Lambda functions to call SQS and SNS services
+    Default: arn:aws:iam::905418123070:role/CloudX-LambdaNotificatorRole
+
+  LambdaDataConsistencyRoleParameter:
+    Type: String
+    Description: Allows Lambda functions to call RDS and S3 services to synchronize images and metadata
+    Default: arn:aws:iam::905418123070:role/CloudX-LambdaConsistencyRole
+
+  LambdaS3LoggerRoleParameter:
+    Type: String
+    Description: Allows Lambda functions to call RDS and S3 services to synchronize images and metadata
+    Default: arn:aws:iam::905418123070:role/CloudX-S3LoggerRole
+
 Resources:
   # S3 Setup
   S3BucketYury:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: s3-cloudx-images-store
+      BucketName: !Ref BucketNameParameter
+      # NotificationConfiguration:
+      #   LambdaConfigurations:
+      #     - Function: !GetAtt LambdaS3LogsFunction.Arn
+      #       Event: s3:ObjectCreated:Put
       Tags:
         - Key: project
           Value: cloudx
@@ -74,7 +107,7 @@ Resources:
       CidrBlock: 10.0.11.0/24
       AvailabilityZone: !Select
         - 0
-        - !GetAZs ''
+        - !GetAZs ""
       Tags:
         - Key: Name
           Value: dotnet-webapi-PublicSubnet-A
@@ -88,7 +121,7 @@ Resources:
       CidrBlock: 10.0.12.0/24
       AvailabilityZone: !Select
         - 1
-        - !GetAZs ''
+        - !GetAZs ""
       Tags:
         - Key: Name
           Value: dotnet-webapi-PublicSubnet-B
@@ -102,7 +135,7 @@ Resources:
       CidrBlock: 10.0.13.0/24
       AvailabilityZone: !Select
         - 0
-        - !GetAZs ''
+        - !GetAZs ""
       Tags:
         - Key: Name
           Value: dotnet-webapi-PrivateSubnet-A
@@ -116,7 +149,7 @@ Resources:
       CidrBlock: 10.0.14.0/24
       AvailabilityZone: !Select
         - 1
-        - !GetAZs ''
+        - !GetAZs ""
       Tags:
         - Key: Name
           Value: dotnet-webapi-PrivateSubnet-B
@@ -154,35 +187,35 @@ Resources:
       SubnetId: !Ref PublicSubnetBYury
       RouteTableId: !Ref PublicRouteTable
 
-  # # Private Subnet Routing Setup
-  # PrivateRouteTable:
-  #   Type: AWS::EC2::RouteTable
-  #   Properties:
-  #     VpcId: !Ref VPCYury
-  #     Tags:
-  #       - Key: Name
-  #         Value: dotnet-webapi-PrivateRouteTable
-  #       - Key: project
-  #         Value: cloudx
-
-  # PrivateRoute:
-  #   Type: AWS::EC2::Route
-  #   DependsOn: InternetGatewayAttachment
-  #   Properties:
-  #     RouteTableId: !Ref PrivateRouteTable
-  #     DestinationCidrBlock: 0.0.0.0/0
-
-  # PrivateSubnetARouteTableAssociation:
-  #   Type: AWS::EC2::SubnetRouteTableAssociation
-  #   Properties:
-  #     SubnetId: !Ref PrivateSubnetAYury
-  #     RouteTableId: !Ref PrivateRouteTable
-
-  # PrivateSubnetBRouteTableAssociation:
-  #   Type: AWS::EC2::SubnetRouteTableAssociation
-  #   Properties:
-  #     SubnetId: !Ref PrivateSubnetBYury
-  #     RouteTableId: !Ref PrivateRouteTable
+  # Private Subnet Routing Setup
+  PrivateRouteTable:
+   Type: AWS::EC2::RouteTable
+   Properties:
+     VpcId: !Ref VPCYury
+     Tags:
+       - Key: Name
+         Value: dotnet-webapi-PrivateRouteTable
+       - Key: project
+         Value: cloudx
+  
+  PrivateRoute:
+   Type: AWS::EC2::Route
+   DependsOn: InternetGatewayAttachment
+   Properties:
+     RouteTableId: !Ref PrivateRouteTable
+     DestinationCidrBlock: 0.0.0.0/0
+  
+  PrivateSubnetARouteTableAssociation:
+   Type: AWS::EC2::SubnetRouteTableAssociation
+   Properties:
+     SubnetId: !Ref PrivateSubnetAYury
+     RouteTableId: !Ref PrivateRouteTable
+  
+  PrivateSubnetBRouteTableAssociation:
+   Type: AWS::EC2::SubnetRouteTableAssociation
+   Properties:
+     SubnetId: !Ref PrivateSubnetBYury
+     RouteTableId: !Ref PrivateRouteTable
 
   # Security Group Setup - EC2
 
@@ -252,7 +285,7 @@ Resources:
       ToPort: 5432
       CidrIp: !Ref MyIpParameter
       GroupId: !Ref SecurityGroupRDSAccess
-      
+
   # EC2 Launch Template
   EC2LaunchTemplateWebApi:
     Type: AWS::EC2::LaunchTemplate
@@ -285,9 +318,9 @@ Resources:
         - !Ref PublicSubnetBYury
       TargetGroupARNs:
         - !Ref TargetGroupWebApi
-      MaxSize: '3'
-      MinSize: '1'
-      DesiredCapacity: '1'
+      MaxSize: "3"
+      MinSize: "1"
+      DesiredCapacity: "1"
 
   CpuUsageScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -333,7 +366,7 @@ Resources:
       HealthCheckTimeoutSeconds: 10
       HealthCheckPath: /
       HealthCheckProtocol: HTTP
-      HealthCheckPort: '80'
+      HealthCheckPort: "80"
       HealthyThresholdCount: 4
       Protocol: HTTP
       Port: 80
@@ -358,7 +391,7 @@ Resources:
 
   # DB Instance
 
-  DataBaseImages:
+  DatabaseInstance:
     Type: AWS::RDS::DBInstance
     DeletionPolicy: Delete
     Properties:
@@ -367,32 +400,32 @@ Resources:
       DBSubnetGroupName: !Ref DbSubnetGroup
       Engine: postgres
       StorageType: gp3
-      AllocatedStorage: '20'
+      AllocatedStorage: "20"
       DBInstanceIdentifier: database-1
-      MasterUsername: postgres
-      MasterUserPassword: Mwb5KIdk4igOpUlpbsCV
+      MasterUsername: !Ref DatabaseUserNameParameter
+      MasterUserPassword: !Ref DatabaseUserPasswordParameter
       AutoMinorVersionUpgrade: false
       PubliclyAccessible: true
       MultiAZ: false
       AvailabilityZone: !Select
         - 0
-        - !GetAZs ''
+        - !GetAZs ""
       VPCSecurityGroups:
         - !Ref SecurityGroupRDSAccess
 
   # Simple Queue Service
 
-  QueueInstance:
+  UploadsNotificationQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: dotnet-webapi-UploadsNotificationQueue
       Tags:
         - Key: project
           Value: cloudx
-  
+
   # Simple Notification Service
-  
-  NotificationsGateway:
+
+  UploadsNotificationTopic:
     Type: AWS::SNS::Topic
     Properties:
       DisplayName: "CloudX SNS Upload"
@@ -400,3 +433,83 @@ Resources:
       Tags:
         - Key: project
           Value: cloudx
+
+  # Lambda Functions
+  LambdaUploadsNotificationFunction:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - UploadsNotificationQueue
+      - UploadsNotificationTopic
+    Properties:
+      FunctionName: dotnet-webapi-UploadsNotificationFunction
+      Role: !Ref LambdaNotificatorRoleParameter
+      Runtime: dotnet8
+      MemorySize: 512
+      Timeout: 30
+      PackageType: Zip
+      Handler: LambdaSnsSqsNotification
+      Code:
+        S3Bucket: s3-dotnet-webapi-functions
+        S3Key: UploadsNotificationFunction.zip
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref UploadsNotificationTopic
+      TracingConfig:
+        Mode: Active
+  
+  LambdaUploadsNotificationFunctionEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !GetAtt LambdaUploadsNotificationFunction.Arn
+      EventSourceArn: !GetAtt UploadsNotificationQueue.Arn
+      BatchSize: 10
+      MaximumBatchingWindowInSeconds: 50
+
+  LambdaDataConsistencyFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: dotnet-webapi-DataConsistencyFunction
+      Role: !Ref LambdaDataConsistencyRoleParameter
+      Runtime: dotnet8
+      MemorySize: 512
+      Timeout: 30
+      PackageType: Zip
+      Handler: DataConsistencyFunction
+      Code:
+        S3Bucket: s3-dotnet-webapi-functions
+        S3Key: DataConsistencyFunction.zip
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref S3BucketYury
+          PGHOST: !GetAtt DatabaseInstance.Endpoint.Address
+          PGDATABASE: ImagesMetadata
+          PGUSER: !Ref DatabaseUserNameParameter
+          PGPASSWORD:	!Ref DatabaseUserPasswordParameter
+      TracingConfig:
+        Mode: Active
+
+  LambdaS3LogsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: dotnet-webapi-S3LogsFunction
+      Role: !Ref LambdaS3LoggerRoleParameter
+      Runtime: dotnet8
+      MemorySize: 512
+      Timeout: 30
+      PackageType: Zip
+      Handler: S3LogsFunction
+      Code:
+        S3Bucket: s3-dotnet-webapi-functions
+        S3Key: S3LogsFunction.zip
+      TracingConfig:
+        Mode: Active
+
+  # Lambda Permissions
+
+  AllowS3ToCallLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaS3LogsFunction.Arn
+      Principal: 's3.amazonaws.com'
+      SourceArn: !GetAtt S3Bucket.Arn
