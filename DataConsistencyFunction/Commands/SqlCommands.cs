@@ -2,7 +2,7 @@ namespace DataConsistencyFunction.Commands;
 
 public static class SqlCommands
 {
-    public static readonly string CountRows = "SELECT COUNT(*) FROM Images;";
+    public static readonly string CountRows = """SELECT COUNT(*) FROM "Images";""";
 
     public static readonly string CreateIfNotExists =
         """
