@@ -25,11 +25,11 @@ public class UploadImage(
             await this.SaveImageAsync(file, cancellation);
             await this.ProduceMetadataAsync(file, cancellation);
         }
-        catch
+        catch(Exception ex)
         {
             await this.TryRemoveImageAsync(file, cancellation);
 
-            throw;
+            throw new Exception("Fallback exception thrown", ex);
         }
     }
 

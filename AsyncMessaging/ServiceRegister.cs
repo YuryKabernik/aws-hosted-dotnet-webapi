@@ -1,6 +1,5 @@
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
-using AsyncMessaging.Listeners;
 using AsyncMessaging.Notifications;
 using AsyncMessaging.Options;
 using AsyncMessaging.Producers;
@@ -24,8 +23,6 @@ public static class ServiceRegister
         services.TryAddScoped<ImageUploadedProducer>();
         services.TryAddScoped<QueueService>();
         
-        services.AddHostedService<QueueListenerService>();
-
         return services;
     }
 }
