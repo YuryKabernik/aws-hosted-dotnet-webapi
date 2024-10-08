@@ -105,7 +105,7 @@ Resources:
       IpProtocol: tcp
       FromPort: 5432
       ToPort: 5432
-      SourceSecurityGroupId: !Ref DatabaseSecurityGroup
+      SourceSecurityGroupId: !Ref LambdaSecurityGroup
 
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -203,7 +203,6 @@ Resources:
         Mode: Active
       VpcConfig:
         SecurityGroupIds:
-          - !Ref DatabaseSecurityGroup
           - !Ref LambdaSecurityGroup
         SubnetIds:
           - !Ref PrivateSubnetAYury
@@ -220,12 +219,57 @@ Resources:
         - Arn: !GetAtt LambdaDataConsistencyFunction.Arn
           Id: !Ref LambdaDataConsistencyFunction
 
+  DataConsistencyApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: dotnet-webapi-ApiGateway
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  DataConsistencyApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      PathPart: consistency
+      ParentId: !GetAtt DataConsistencyApiGateway.RootResourceId
+      RestApiId: !Ref DataConsistencyApiGateway
+
+  DataConsistencyApiGatewayResourceMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId: !Ref DataConsistencyApiGatewayResource
+      RestApiId: !Ref DataConsistencyApiGateway
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaDataConsistencyFunction.Arn}/invocations
+
+  DataConsistencyApiDeploy:
+    DependsOn: DataConsistencyApiGatewayResourceMethod
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref DataConsistencyApiGateway
+      StageName: webapi-dotnet
+
   # Permissions
 
-  AllowInvokeLambdaPermission:
+  AllowScheduledEventsInvokeLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt LambdaDataConsistencyFunction.Arn
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt DataConsistencyCheckEventRule.Arn
+
+  AllowApiGatewayInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaDataConsistencyFunction.Arn
+      Principal: "apigateway.amazonaws.com"
