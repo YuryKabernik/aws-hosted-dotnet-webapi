@@ -12,19 +12,10 @@ Parameters:
     Default: arn:aws:iam::905418123070:role/CloudX-S3LoggerRole
 
 Resources:
-  # Permissions
-
-  AllowS3ToCallLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaS3LogsFunction.Arn
-      Principal: "s3.amazonaws.com"
-      SourceArn: !Sub "arn:aws:s3:::${BucketNameParameter}"
 
   # S3 bucket
 
-  S3Bucket:
+  ImagesBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     DependsOn: AllowS3ToCallLambdaPermission
@@ -55,3 +46,13 @@ Resources:
         S3Key: S3LogsFunction.zip
       TracingConfig:
         Mode: Active
+
+# Permissions
+
+  AllowS3ToCallLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaS3LogsFunction.Arn
+      Principal: "s3.amazonaws.com"
+      SourceArn: !Sub "arn:aws:s3:::${BucketNameParameter}"

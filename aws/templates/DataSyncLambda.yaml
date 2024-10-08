@@ -123,7 +123,7 @@ Resources:
       CidrIp: 0.0.0.0/0
 
   # S3 bucket
-  S3Bucket:
+  ImagesBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
@@ -197,7 +197,7 @@ Resources:
         S3Key: DataConsistencyFunction.zip
       Environment:
         Variables:
-          BUCKET_NAME: !Ref S3Bucket
+          BUCKET_NAME: !Ref ImagesBucket
           Postgres: !Sub "Host=${DatabaseInstance.Endpoint.Address};Database=ImagesMetadata;Port=5432;Username=${DatabaseUserNameParameter};Password=${DatabaseUserPasswordParameter};"
       TracingConfig:
         Mode: Active
@@ -208,7 +208,8 @@ Resources:
           - !Ref PrivateSubnetAYury
           - !Ref PrivateSubnetBYury
 
-  # Event Run Every 5 Minutes
+  # AWS Event
+
   DataConsistencyCheckEventRule:
     Type: AWS::Events::Rule
     Properties:
@@ -218,6 +219,8 @@ Resources:
       Targets:
         - Arn: !GetAtt LambdaDataConsistencyFunction.Arn
           Id: !Ref LambdaDataConsistencyFunction
+
+  # APIGateway
 
   DataConsistencyApiGateway:
     Type: AWS::ApiGateway::RestApi

@@ -58,19 +58,49 @@ Parameters:
     Default: arn:aws:iam::905418123070:role/CloudX-S3LoggerRole
 
 Resources:
+  # Simple Queue Service
+
+  UploadsNotificationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: dotnet-webapi-UploadsNotificationQueue
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  # Simple Notification Service
+
+  UploadsNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "CloudX SNS Upload"
+      TopicName: dotnet-webapi-UploadsNotificationTopic
+      Tags:
+        - Key: project
+          Value: cloudx
+
   # S3 Setup
-  S3BucketYury:
+  ImagesBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       BucketName: !Ref BucketNameParameter
-      # NotificationConfiguration:
-      #   LambdaConfigurations:
-      #     - Function: !GetAtt LambdaS3LogsFunction.Arn
-      #       Event: s3:ObjectCreated:Put
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Function: !GetAtt LambdaS3LogsFunction.Arn
+            Event: s3:ObjectCreated:Put
       Tags:
         - Key: project
           Value: cloudx
+
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPCYury
+      VpcEndpointType: "Gateway"
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      RouteTableIds:
+        - !Ref PrivateRouteTable
 
   # VPC Setup
   VPCYury:
@@ -187,37 +217,31 @@ Resources:
       SubnetId: !Ref PublicSubnetBYury
       RouteTableId: !Ref PublicRouteTable
 
-  # Private Subnet Routing Setup
-  PrivateRouteTable:
-   Type: AWS::EC2::RouteTable
-   Properties:
-     VpcId: !Ref VPCYury
-     Tags:
-       - Key: Name
-         Value: dotnet-webapi-PrivateRouteTable
-       - Key: project
-         Value: cloudx
-  
-  PrivateRoute:
-   Type: AWS::EC2::Route
-   DependsOn: InternetGatewayAttachment
-   Properties:
-     RouteTableId: !Ref PrivateRouteTable
-     DestinationCidrBlock: 0.0.0.0/0
-  
-  PrivateSubnetARouteTableAssociation:
-   Type: AWS::EC2::SubnetRouteTableAssociation
-   Properties:
-     SubnetId: !Ref PrivateSubnetAYury
-     RouteTableId: !Ref PrivateRouteTable
-  
-  PrivateSubnetBRouteTableAssociation:
-   Type: AWS::EC2::SubnetRouteTableAssociation
-   Properties:
-     SubnetId: !Ref PrivateSubnetBYury
-     RouteTableId: !Ref PrivateRouteTable
+  # Private Subnet Routing
 
-  # Security Group Setup - EC2
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCYury
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PrivateRouteTable
+        - Key: project
+          Value: cloudx
+
+  PrivateSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetAYury
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetBYury
+      RouteTableId: !Ref PrivateRouteTable
+
+  # Security Group - EC2
 
   SecurityGroupEC2Access:
     Type: AWS::EC2::SecurityGroup
@@ -256,9 +280,9 @@ Resources:
       CidrIp: !Ref MyIpParameter
       GroupId: !Ref SecurityGroupEC2Access
 
-  # Security Group Setup - RDS
+  # Security Group - RDS
 
-  SecurityGroupRDSAccess:
+  DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId: !Ref VPCYury
@@ -275,7 +299,7 @@ Resources:
       FromPort: 5432
       ToPort: 5432
       SourceSecurityGroupId: !Ref SecurityGroupEC2Access
-      GroupId: !Ref SecurityGroupRDSAccess
+      GroupId: !Ref DatabaseSecurityGroup
 
   SecurityGroupIngressPostgresSqlYury:
     Type: AWS::EC2::SecurityGroupIngress
@@ -284,7 +308,33 @@ Resources:
       FromPort: 5432
       ToPort: 5432
       CidrIp: !Ref MyIpParameter
-      GroupId: !Ref SecurityGroupRDSAccess
+      GroupId: !Ref DatabaseSecurityGroup
+
+  SecurityGroupIngressPostgresSqlWithLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref LambdaSecurityGroup
+
+  # Security Group - RDS
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda function
+      VpcId: !Ref VPCYury
+
+  SecurityGroupEgressLambdaGroup:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref LambdaSecurityGroup
+      IpProtocol: "-1"
+      FromPort: 0
+      ToPort: 65535
+      CidrIp: 0.0.0.0/0
 
   # EC2 Launch Template
   EC2LaunchTemplateWebApi:
@@ -405,36 +455,60 @@ Resources:
       MasterUsername: !Ref DatabaseUserNameParameter
       MasterUserPassword: !Ref DatabaseUserPasswordParameter
       AutoMinorVersionUpgrade: false
-      PubliclyAccessible: true
+      DeleteAutomatedBackups: true
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 0
       MultiAZ: false
       AvailabilityZone: !Select
         - 0
         - !GetAZs ""
       VPCSecurityGroups:
-        - !Ref SecurityGroupRDSAccess
-
-  # Simple Queue Service
-
-  UploadsNotificationQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: dotnet-webapi-UploadsNotificationQueue
-      Tags:
-        - Key: project
-          Value: cloudx
-
-  # Simple Notification Service
-
-  UploadsNotificationTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      DisplayName: "CloudX SNS Upload"
-      TopicName: dotnet-webapi-UploadsNotificationTopic
-      Tags:
-        - Key: project
-          Value: cloudx
+        - !Ref DatabaseSecurityGroup
 
   # Lambda Functions
+
+  LambdaDataConsistencyFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: dotnet-webapi-DataConsistencyFunction
+      Role: !Ref LambdaDataConsistencyRoleParameter
+      Runtime: dotnet8
+      MemorySize: 512
+      Timeout: 30
+      PackageType: Zip
+      Handler: DataConsistencyFunction
+      Code:
+        S3Bucket: s3-dotnet-webapi-functions
+        S3Key: DataConsistencyFunction.zip
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref ImagesBucket
+          Postgres: !Sub "Host=${DatabaseInstance.Endpoint.Address};Database=ImagesMetadata;Port=5432;Username=${DatabaseUserNameParameter};Password=${DatabaseUserPasswordParameter};"
+      TracingConfig:
+        Mode: Active
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnetAYury
+          - !Ref PrivateSubnetBYury
+
+  LambdaS3LogsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: dotnet-webapi-S3LogsFunction
+      Role: !Ref LambdaS3LoggerRoleParameter
+      Runtime: dotnet8
+      MemorySize: 512
+      Timeout: 30
+      PackageType: Zip
+      Handler: S3LogsFunction
+      Code:
+        S3Bucket: s3-dotnet-webapi-functions
+        S3Key: S3LogsFunction.zip
+      TracingConfig:
+        Mode: Active
+
   LambdaUploadsNotificationFunction:
     Type: AWS::Lambda::Function
     DependsOn:
@@ -456,7 +530,7 @@ Resources:
           SNS_TOPIC_ARN: !Ref UploadsNotificationTopic
       TracingConfig:
         Mode: Active
-  
+
   LambdaUploadsNotificationFunctionEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
@@ -465,51 +539,79 @@ Resources:
       BatchSize: 10
       MaximumBatchingWindowInSeconds: 50
 
-  LambdaDataConsistencyFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: dotnet-webapi-DataConsistencyFunction
-      Role: !Ref LambdaDataConsistencyRoleParameter
-      Runtime: dotnet8
-      MemorySize: 512
-      Timeout: 30
-      PackageType: Zip
-      Handler: DataConsistencyFunction
-      Code:
-        S3Bucket: s3-dotnet-webapi-functions
-        S3Key: DataConsistencyFunction.zip
-      Environment:
-        Variables:
-          BUCKET_NAME: !Ref S3BucketYury
-          PGHOST: !GetAtt DatabaseInstance.Endpoint.Address
-          PGDATABASE: ImagesMetadata
-          PGUSER: !Ref DatabaseUserNameParameter
-          PGPASSWORD:	!Ref DatabaseUserPasswordParameter
-      TracingConfig:
-        Mode: Active
+  # Permissions
 
-  LambdaS3LogsFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: dotnet-webapi-S3LogsFunction
-      Role: !Ref LambdaS3LoggerRoleParameter
-      Runtime: dotnet8
-      MemorySize: 512
-      Timeout: 30
-      PackageType: Zip
-      Handler: S3LogsFunction
-      Code:
-        S3Bucket: s3-dotnet-webapi-functions
-        S3Key: S3LogsFunction.zip
-      TracingConfig:
-        Mode: Active
-
-  # Lambda Permissions
-
-  AllowS3ToCallLambdaPermission:
+  AllowS3EventInvokeLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt LambdaS3LogsFunction.Arn
-      Principal: 's3.amazonaws.com'
-      SourceArn: !GetAtt S3Bucket.Arn
+      Principal: "s3.amazonaws.com"
+      SourceArn: !Sub "arn:aws:s3:::${BucketNameParameter}"
+
+  AllowScheduledEventsInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaDataConsistencyFunction.Arn
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt DataConsistencyCheckEventRule.Arn
+
+  AllowApiGatewayInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaDataConsistencyFunction.Arn
+      Principal: "apigateway.amazonaws.com"
+
+  # AWS Event
+
+  DataConsistencyCheckEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: dotnet-webapi-ScheduledConsistencyCheck
+      ScheduleExpression: "rate(5 minutes)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt LambdaDataConsistencyFunction.Arn
+          Id: !Ref LambdaDataConsistencyFunction
+
+  # APIGateway
+
+  DataConsistencyApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: dotnet-webapi-ApiGateway
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  DataConsistencyApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      PathPart: consistency
+      ParentId: !GetAtt DataConsistencyApiGateway.RootResourceId
+      RestApiId: !Ref DataConsistencyApiGateway
+
+  DataConsistencyApiGatewayResourceMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId: !Ref DataConsistencyApiGatewayResource
+      RestApiId: !Ref DataConsistencyApiGateway
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaDataConsistencyFunction.Arn}/invocations
+
+  DataConsistencyApiDeploy:
+    DependsOn: DataConsistencyApiGatewayResourceMethod
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref DataConsistencyApiGateway
+      StageName: webapi-dotnet
