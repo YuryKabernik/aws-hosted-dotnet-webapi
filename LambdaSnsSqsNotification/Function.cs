@@ -20,6 +20,8 @@ var notificationService = new EmailNotificationService(client, Options.Create(to
 // The function handler that will be called for each Lambda event
 async Task Handler(SQSEvent input, ILambdaContext context)
 {
+    context.Logger.LogInformation($"Executing lambda function from {context} for SQS event.");
+    
     var messages = input.Records.Select(record =>
         JsonSerializer.Deserialize<EmailNotificationMessage>(record.Body, JsonSerializerOptions.Default)!);
 
@@ -27,6 +29,8 @@ async Task Handler(SQSEvent input, ILambdaContext context)
     {
         await notificationService.PushNotificationAsync(message, CancellationToken.None);
     }
+
+    context.Logger.LogInformation($"Completed lambda function for SQS event.");
 }
 
 var functionHandler = Handler;

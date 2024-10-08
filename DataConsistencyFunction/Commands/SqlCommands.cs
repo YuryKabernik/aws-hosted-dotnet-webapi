@@ -6,7 +6,7 @@ public static class SqlCommands
 
     public static readonly string CreateIfNotExists =
         """
-        CREATE TABLE IF NOT EXISTS Images (
+        CREATE TABLE IF NOT EXISTS "Images" (
             "Name" text NOT NULL,
             "Size" bigint NOT NULL,
             "Extension" text NOT NULL,
