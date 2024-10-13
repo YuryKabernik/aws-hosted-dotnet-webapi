@@ -18,6 +18,6 @@
     <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AsyncMessaging\AsyncMessaging.csproj" />
+    <ProjectReference Include="..\..\Webapi\AsyncMessaging\AsyncMessaging.csproj" />
   </ItemGroup>
 </Project>
