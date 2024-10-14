@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UseCases", "Webapi\UseCases
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storage", "Webapi\Storage\Storage.csproj", "{C4561DAC-6F72-4378-A421-20A823C2D19C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LambdaSnsSqsNotification", "Functions\LambdaSnsSqsNotification\LambdaSnsSqsNotification.csproj", "{7936A0E0-03AF-4EE4-8F51-5285D1B753A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LambdaSnsSqsNotification", "Functions\src\LambdaSnsSqsNotification\LambdaSnsSqsNotification.csproj", "{7936A0E0-03AF-4EE4-8F51-5285D1B753A8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataConsistencyFunction", "Functions\DataConsistencyFunction\DataConsistencyFunction.csproj", "{D0E3122B-EE47-4C4D-AB82-D06E6633D3FA}"
 EndProject
