@@ -31,6 +31,7 @@ Resources:
       Handler: S3LogsFunction
       Runtime: dotnet8
       MemorySize: 512
+      PackageType: Zip
       Timeout: 30
       Policies:
         - AWSLambdaRole

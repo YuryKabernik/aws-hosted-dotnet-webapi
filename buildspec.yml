@@ -1,0 +1,27 @@
+version: 0.2
+
+env:
+  shell: /bin/sh
+  git-credential-helper: no
+
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      dotnet: 8.0
+    commands:
+      - sam --version
+    
+  build:
+    on-failure: ABORT
+    commands:
+      - dotnet build -c Release
+      - sam build --template-file ./Functions/S3LogsFunction/template.yaml --build-dir ./Functions/S3LogsFunction/.aws-sam
+      - sam build --template-file ./Functions/LambdaSnsSqsNotification/template.yaml --build-dir ./Functions/LambdaSnsSqsNotification/.aws-sam
+    
+artifacts:
+  files:
+    - ./Functions/S3LogsFunction/.aws-sam/**/*
+    - ./Functions/S3LogsFunction/.aws-sam/template.yaml
+    - ./Functions/LambdaSnsSqsNotification/.aws-sam/**/*
+    - ./Functions/LambdaSnsSqsNotification/.aws-sam/template.yaml

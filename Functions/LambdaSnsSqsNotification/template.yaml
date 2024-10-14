@@ -23,11 +23,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: dotnet-webapi-UploadsNotificationFunction
-      CodeUri: .
+      CodeUri: ./src/
       Handler: LambdaSnsSqsNotification
       Runtime: dotnet8
       MemorySize: 512
       Timeout: 30
+      PackageType: Zip
       Events:
         SQSEvent:
           Type: SQS
