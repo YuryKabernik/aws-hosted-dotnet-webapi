@@ -47,7 +47,7 @@ Resources:
       TracingConfig:
         Mode: Active
 
-# Permissions
+  # Permissions
 
   AllowS3ToCallLambdaPermission:
     Type: AWS::Lambda::Permission
