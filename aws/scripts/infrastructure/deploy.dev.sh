@@ -7,4 +7,4 @@ aws cloudformation create-stack \
     --stack-name webapi-dotnet-Yury-Kabernik-Berazouski \
     --template-body file://$PWD/aws/templates/template.dev.yaml \
     --parameters ParameterKey=MyIpParameter,ParameterValue=$ipAddress \
-    --tags project=cloudx
+    --tags Key=project,Value=cloudx
