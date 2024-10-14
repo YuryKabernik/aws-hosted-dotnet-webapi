@@ -28,6 +28,13 @@ Resources:
       Runtime: dotnet8
       MemorySize: 512
       Timeout: 30
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt UploadsNotificationQueue.Arn
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 50
       Environment:
         Variables:
           SNS_TOPIC_ARN: !Ref UploadsNotificationTopic
@@ -35,14 +42,6 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - AWSLambdaSQSQueueExecutionRole
         - AmazonSNSFullAccess
-      
-  LambdaUploadsNotificationFunctionEventSourceMapping:
-    Type: AWS::Lambda::EventSourceMapping
-    Properties:
-      FunctionName: !GetAtt LambdaUploadsNotificationFunction.Arn
-      EventSourceArn: !GetAtt UploadsNotificationQueue.Arn
-      BatchSize: 10
-      MaximumBatchingWindowInSeconds: 50
 
   # Simple Queue Service
 
