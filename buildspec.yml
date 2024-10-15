@@ -18,26 +18,26 @@ phases:
       - dotnet build -c Release
       - > 
         sam build
-          --template-file ./Functions/S3LogsFunction/template.yaml
-          --build-dir ./Functions/S3LogsFunction/.aws-sam
+        --template-file ./Functions/S3LogsFunction/template.yaml
+        --build-dir ./Functions/S3LogsFunction/.aws-sam
       - >
         sam build
-          --template-file ./Functions/LambdaSnsSqsNotification/template.yaml
-          --build-dir ./Functions/LambdaSnsSqsNotification/.aws-sam
+        --template-file ./Functions/LambdaSnsSqsNotification/template.yaml
+        --build-dir ./Functions/LambdaSnsSqsNotification/.aws-sam
 
   post_build:
     on-failure: ABORT
     commands:
       - >
         sam package
-         --config-file ../samconfig.yaml
-         --template-file ./Functions/S3LogsFunction/.aws-sam/template.yaml
-         --output-template-file ./Functions/S3LogsFunction/.aws-sam/package-template.yaml
+        --config-file ../samconfig.yaml
+        --template-file ./Functions/S3LogsFunction/.aws-sam/template.yaml
+        --output-template-file ./Functions/S3LogsFunction/.aws-sam/package-template.yaml
       - >
         sam package
-         --config-file ../samconfig.yaml
-         --template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/template.yaml
-         --output-template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/package-template.yaml
+        --config-file ../samconfig.yaml
+        --template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/template.yaml
+        --output-template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/package-template.yaml
 
 artifacts:
   files:
