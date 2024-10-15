@@ -30,12 +30,12 @@ phases:
     commands:
       - >
         sam package
-        --config-file ../samconfig.yaml
+        --config-file ../samconfig.toml
         --template-file ./Functions/S3LogsFunction/.aws-sam/template.yaml
         --output-template-file ./Functions/S3LogsFunction/.aws-sam/package-template.yaml
       - >
         sam package
-        --config-file ../samconfig.yaml
+        --config-file ../samconfig.toml
         --template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/template.yaml
         --output-template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/package-template.yaml
 
