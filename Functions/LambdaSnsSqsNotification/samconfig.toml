@@ -3,7 +3,9 @@
 version = 0.1
 
 [default.global.parameters]
-stack_name = "Serverless.UploadsNotificationLambda"
+stack_name = "serverless-UploadNotification"
+s3_prefix = "serverless-UploadNotification"
+s3_bucket = "cloudx-serverless-artifacts"
 
 [default.build.parameters]
 cached = true
@@ -15,14 +17,10 @@ lint = true
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
-resolve_s3 = true
-stack_name = "serverless-UploadNotification"
-s3_prefix = "serverless-UploadNotification"
 region = "eu-central-1"
 image_repositories = []
 
 [default.package.parameters]
-resolve_s3 = true
 
 [default.sync.parameters]
 watch = true
