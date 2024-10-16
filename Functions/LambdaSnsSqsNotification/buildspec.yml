@@ -21,9 +21,8 @@ phases:
   post_build:
     on-failure: ABORT
     commands:
-      - cd ./Functions/LambdaSnsSqsNotification/
       - sam package --output-template-file ./.aws-sam/package-template.yaml
 
 artifacts:
   files:
-    - ./.aws-sam/package-template.yaml
+    - ./Functions/LambdaSnsSqsNotification/.aws-sam/package-template.yaml
