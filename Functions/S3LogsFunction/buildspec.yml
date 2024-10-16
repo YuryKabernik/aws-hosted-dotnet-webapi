@@ -1,0 +1,28 @@
+version: 0.2
+
+env:
+  shell: /bin/sh
+  git-credential-helper: no
+
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      dotnet: 8.0
+    commands:
+      - sam --version
+
+  build:
+    on-failure: ABORT
+    commands:
+      - dotnet build -c Release
+      - sam build
+
+  post_build:
+    on-failure: ABORT
+    commands:
+      - sam package --output-template-file ./.aws-sam/package-template.yaml
+
+artifacts:
+  files:
+    - ./.aws-sam/package-template.yaml
