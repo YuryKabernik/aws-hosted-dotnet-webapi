@@ -21,6 +21,7 @@ phases:
   post_build:
     on-failure: ABORT
     commands:
+      - cd ./Functions/S3LogsFunction/
       - sam package --output-template-file ./.aws-sam/package-template.yaml
 
 artifacts:

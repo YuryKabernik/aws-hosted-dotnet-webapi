@@ -15,12 +15,13 @@ phases:
   build:
     on-failure: ABORT
     commands:
-      - dotnet build -c Release
+      - cd ./Functions/LambdaSnsSqsNotification/
       - sam build
 
   post_build:
     on-failure: ABORT
     commands:
+      - cd ./Functions/LambdaSnsSqsNotification/
       - sam package --output-template-file ./.aws-sam/package-template.yaml
 
 artifacts:
