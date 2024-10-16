@@ -24,5 +24,6 @@ phases:
       - sam package --output-template-file package-template.yaml
 
 artifacts:
+  base-directory: Functions/LambdaSnsSqsNotification
   files:
-    - ./Functions/LambdaSnsSqsNotification/package-template.yaml
+    - package-template.yaml
