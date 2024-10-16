@@ -11,18 +11,18 @@ phases:
       dotnet: 8.0
     commands:
       - sam --version
+      - cd ./Functions/S3LogsFunction/
 
   build:
     on-failure: ABORT
     commands:
-      - cd ./Functions/S3LogsFunction/
       - sam build
 
   post_build:
     on-failure: ABORT
     commands:
-      - sam package --output-template-file ./.aws-sam/package-template.yaml
+      - sam package --output-template-file package-template.yaml
 
 artifacts:
   files:
-    - ./Functions/S3LogsFunction/.aws-sam/package-template.yaml
+    - ./Functions/S3LogsFunction/package-template.yaml

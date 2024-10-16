@@ -11,18 +11,18 @@ phases:
       dotnet: 8.0
     commands:
       - sam --version
+      - cd ./Functions/LambdaSnsSqsNotification/
 
   build:
     on-failure: ABORT
     commands:
-      - cd ./Functions/LambdaSnsSqsNotification/
       - sam build
 
   post_build:
     on-failure: ABORT
     commands:
-      - sam package --output-template-file ./.aws-sam/package-template.yaml
+      - sam package --output-template-file package-template.yaml
 
 artifacts:
   files:
-    - ./Functions/LambdaSnsSqsNotification/.aws-sam/package-template.yaml
+    - ./Functions/LambdaSnsSqsNotification/package-template.yaml
