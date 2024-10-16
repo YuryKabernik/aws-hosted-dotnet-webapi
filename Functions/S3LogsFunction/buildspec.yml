@@ -15,7 +15,7 @@ phases:
   build:
     on-failure: ABORT
     commands:
-      - dotnet build -c Release
+      - cd ./Functions/S3LogsFunction/
       - sam build
 
   post_build:
