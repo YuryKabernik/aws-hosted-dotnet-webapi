@@ -1,0 +1,32 @@
+{
+  "name": "aws-hosted-webapi-devcontainer",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "8.0",
+      "additionalVersions": "lts"
+    },
+    "ghcr.io/devcontainers/features/aws-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/customink/codespaces-features/sam-cli": {}
+  },
+  "mounts": [
+    { "source": "${localEnv:HOME}${localEnv:USERPROFILE}/.aws", "target": "/root/.aws", "type": "bind" }
+  ],
+  "forwardPorts": [ 8080, 8081 ],
+  "portsAttributes": {
+    "8080": { "label": "HTTP Development Application port", "protocol": "http" },
+    "8081": { "label": "HTTPS Development Application port", "protocol": "https" }
+  },
+  "customizations": {
+		"vscode": {
+			"settings": {},
+			"extensions": [
+        "ms-dotnettools.csdevkit",
+        "AmazonWebServices.aws-toolkit-vscode",
+        "eamodio.gitlens"
+      ]
+		}
+  }
+}
