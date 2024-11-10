@@ -11,8 +11,9 @@
     },
     "ghcr.io/customink/codespaces-features/sam-cli": {}
   },
+  "remoteUser": "root",
   "mounts": [
-    { "source": "${localEnv:HOME}${localEnv:USERPROFILE}/.aws", "target": "/root/.aws", "type": "bind" }
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/root/.aws,type=bind,consistency=cached"
   ],
   "forwardPorts": [
     8080,
