@@ -1,8 +1,0 @@
-{
-    "yaml.schemas": {
-        "https://raw.githubusercontent.com/aws/serverless-application-model/main/samtranslator/schema/schema.json": [
-            "file:///Users/yury_kabernik-berazouski/Desktop/AWSFunctions/dotnet-intermediate-mentoring-program/aws/templates/S3LogsLambda.yaml",
-            "file:///Users/yury_kabernik-berazouski/Desktop/AWSFunctions/dotnet-intermediate-mentoring-program/aws/templates/DataSyncLambda.yaml"
-        ]
-    }
-}

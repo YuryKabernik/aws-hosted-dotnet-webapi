@@ -14,19 +14,35 @@
   "mounts": [
     { "source": "${localEnv:HOME}${localEnv:USERPROFILE}/.aws", "target": "/root/.aws", "type": "bind" }
   ],
-  "forwardPorts": [ 8080, 8081 ],
+  "forwardPorts": [
+    8080,
+    8081
+  ],
   "portsAttributes": {
-    "8080": { "label": "HTTP Development Application port", "protocol": "http" },
-    "8081": { "label": "HTTPS Development Application port", "protocol": "https" }
+    "8080": {
+      "label": "HTTP Development Application port",
+      "protocol": "http"
+    },
+    "8081": {
+      "label": "HTTPS Development Application port",
+      "protocol": "https"
+    }
   },
   "customizations": {
-		"vscode": {
-			"settings": {},
-			"extensions": [
+    "vscode": {
+      "settings": {
+        "yaml.schemas": {
+          "https://raw.githubusercontent.com/aws/serverless-application-model/main/samtranslator/schema/schema.json": [
+            "${containerWorkspaceFolder}/aws/templates/*.yaml"
+          ]
+        }
+      },
+      "extensions": [
         "ms-dotnettools.csdevkit",
         "AmazonWebServices.aws-toolkit-vscode",
+        "redhat.vscode-yaml",
         "eamodio.gitlens"
       ]
-		}
+    }
   }
 }
