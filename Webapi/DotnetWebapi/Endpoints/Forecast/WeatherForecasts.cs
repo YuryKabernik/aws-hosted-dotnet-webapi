@@ -1,4 +1,4 @@
-﻿namespace dotnet_intermediate_mentoring_program.Forecast;
+﻿namespace dotnet_intermediate_mentoring_program.Endpoints.Forecast;
 
 public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
