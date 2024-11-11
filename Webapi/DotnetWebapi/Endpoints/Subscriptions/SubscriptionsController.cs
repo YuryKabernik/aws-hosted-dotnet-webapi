@@ -2,7 +2,7 @@ using System.Net;
 using AsyncMessaging.Notifications;
 using Microsoft.AspNetCore.Mvc;
 
-namespace dotnet_intermediate_mentoring_program.Endpoints.Subscriptions
+namespace DotnetWebapi.Endpoints.Subscriptions
 {
     [Route("subscriptions")]
     [ApiController]

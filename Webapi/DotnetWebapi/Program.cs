@@ -1,7 +1,7 @@
 using AsyncMessaging;
 using UseCases;
-using dotnet_intermediate_mentoring_program.Endpoints.Forecast;
-using dotnet_intermediate_mentoring_program.Endpoints.Host;
+using DotnetWebapi.Endpoints.Forecast;
+using DotnetWebapi.Endpoints.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,6 +1,6 @@
 using Amazon.Util;
 
-namespace dotnet_intermediate_mentoring_program.Endpoints.Host;
+namespace DotnetWebapi.Endpoints.Host;
 
 public record InstanceResidenceDetails(string Region, string AvailabilityZone);
 

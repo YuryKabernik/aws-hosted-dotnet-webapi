@@ -25,7 +25,7 @@ namespace Storage.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("dotnet_intermediate_mentoring_program.Images.Responses.ImageMetadata", b =>
+            modelBuilder.Entity("DotnetWebapi.Images.Responses.ImageMetadata", b =>
                 {
                     b.Property<string>("Name")
                         .HasColumnType("text");

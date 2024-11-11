@@ -3,7 +3,7 @@ Description=Example .NET Web API App running on Linux
 
 [Service]
 WorkingDirectory=/var/www/webapi  
-ExecStart=dotnet /var/www/webapi/dotnet-intermediate-mentoring-program.dll
+ExecStart=dotnet /var/www/webapi/DotnetWebapi.dll
 Restart=always
 # Restart service after 10 seconds if the dotnet service crashes:
 RestartSec=10

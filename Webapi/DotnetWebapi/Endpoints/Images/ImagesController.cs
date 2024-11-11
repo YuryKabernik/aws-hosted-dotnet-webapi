@@ -6,7 +6,7 @@ using UseCases.Images.List;
 using UseCases.Images.Metadata;
 using UseCases.Images.Upload;
 
-namespace dotnet_intermediate_mentoring_program.Endpoints.Images;
+namespace DotnetWebapi.Endpoints.Images;
 
 [Route("images")]
 [ApiController]
