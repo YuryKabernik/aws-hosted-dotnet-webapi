@@ -31,8 +31,8 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         path: |
-          /**/bin/
-          /**/obj/
+          **/bin/
+          **/obj/
 
   test:
     runs-on: ubuntu-latest
