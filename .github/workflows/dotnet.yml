@@ -28,19 +28,20 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     
-    - run: ls -l
-
     - uses: actions/upload-artifact@v4
       with:
         path: |
-          bin/
-          obj/
+          /**/bin/
+          /**/obj/
 
   test:
     runs-on: ubuntu-latest
     needs: build
     
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+  
       - uses: actions/download-artifact@v4
 
       - name: Test
