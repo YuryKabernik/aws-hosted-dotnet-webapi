@@ -28,6 +28,8 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     
+    - run: ls -l
+
     - uses: actions/upload-artifact@v4
       with:
         path: |
@@ -39,7 +41,7 @@ jobs:
     needs: build
     
     steps:
-      - uses: actions/download-artifacts@4
+      - uses: actions/download-artifact@v4
 
       - name: Test
         run: dotnet test --no-build --verbosity normal
