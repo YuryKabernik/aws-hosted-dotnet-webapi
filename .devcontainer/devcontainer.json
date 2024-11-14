@@ -40,10 +40,11 @@
         }
       },
       "extensions": [
-        "ms-dotnettools.csdevkit",
         "AmazonWebServices.aws-toolkit-vscode",
-        "redhat.vscode-yaml",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "github.vscode-github-actions",
+        "ms-dotnettools.csdevkit",
+        "redhat.vscode-yaml"
       ]
     }
   }
