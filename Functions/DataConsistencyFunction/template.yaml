@@ -1,0 +1,190 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Serverless.DataConsistencyFunction
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+- AWS::Serverless-2016-10-31
+
+# Objects that are declared in the Parameters section cause the sam deploy --guided command to present additional prompts to the user.
+Parameters:
+  BucketNameParameter:
+    Type: String
+    Default: s3-cloudx-images-store
+
+  DatabaseUserNameParameter:
+    Type: String
+    Description: PostgresSQL username for database connection.
+    Default: postgres
+
+  DatabaseUserPasswordParameter:
+    Type: String
+    Description: PostgresSQL password for database connection.
+    Default: Mwb5KIdk4igOpUlpbsCV
+
+  LambdaDataConsistencyRoleParameter:
+    Type: String
+    Description: Allows Lambda functions to call RDS and S3 services to synchronize images and metadata
+    Default: arn:aws:iam::905418123070:role/CloudX-LambdaConsistencyRole
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  # This is a Lambda function config associated with the source code
+  LambdaDataConsistencyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/
+      Handler: DataConsistencyFunction
+      FunctionName: dotnet-webapi-DataConsistencyFunction
+      Role: !Ref LambdaDataConsistencyRoleParameter
+      Runtime: dotnet8
+      MemorySize: 512
+      Timeout: 30
+      PackageType: Zip
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref ImagesBucket
+          Postgres: !Sub "Host=${DatabaseInstance.Endpoint.Address};Database=ImagesMetadata;Port=5432;Username=${DatabaseUserNameParameter};Password=${DatabaseUserPasswordParameter};"
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnetAYury
+          - !Ref PrivateSubnetBYury
+
+  # S3 bucket
+  ImagesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Ref BucketNameParameter
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPCYury
+      VpcEndpointType: "Gateway"
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      RouteTableIds:
+        - !Ref PrivateRouteTable
+
+  # DB Subnet Group
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: A group describing all subnets for BD instance allocation
+      SubnetIds:
+        - !Ref PrivateSubnetAYury
+        - !Ref PrivateSubnetBYury
+      Tags:
+        - Key: Name
+          Value: dotnet-DbSubnetGroup
+
+  # DB Instance
+
+  DatabaseInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties:
+      DBName: ImagesMetadata
+      DBInstanceClass: db.t4g.micro
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      Engine: postgres
+      StorageType: gp3
+      AllocatedStorage: "20"
+      DBInstanceIdentifier: database-1
+      MasterUsername: !Ref DatabaseUserNameParameter
+      MasterUserPassword: !Ref DatabaseUserPasswordParameter
+      AutoMinorVersionUpgrade: false
+      DeleteAutomatedBackups: true
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 0
+      MultiAZ: false
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      VPCSecurityGroups:
+        - !Ref DatabaseSecurityGroup
+
+  # AWS Event
+
+  DataConsistencyCheckEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: ScheduledConsistencyCheckRule
+      ScheduleExpression: "rate(5 minutes)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt LambdaDataConsistencyFunction.Arn
+          Id: !Ref LambdaDataConsistencyFunction
+
+  # APIGateway
+
+  DataConsistencyApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: dotnet-webapi-ApiGateway
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Tags:
+        - Key: project
+          Value: cloudx
+
+  DataConsistencyApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      PathPart: consistency
+      ParentId: !GetAtt DataConsistencyApiGateway.RootResourceId
+      RestApiId: !Ref DataConsistencyApiGateway
+
+  DataConsistencyApiGatewayResourceMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId: !Ref DataConsistencyApiGatewayResource
+      RestApiId: !Ref DataConsistencyApiGateway
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaDataConsistencyFunction.Arn}/invocations
+
+  DataConsistencyApiDeploy:
+    DependsOn: DataConsistencyApiGatewayResourceMethod
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref DataConsistencyApiGateway
+      StageName: webapi-dotnet
+
+  # Permissions
+
+  AllowScheduledEventsInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaDataConsistencyFunction.Arn
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt DataConsistencyCheckEventRule.Arn
+
+  AllowApiGatewayInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaDataConsistencyFunction.Arn
+      Principal: "apigateway.amazonaws.com"

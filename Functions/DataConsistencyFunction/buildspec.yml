@@ -1,0 +1,29 @@
+version: 0.2
+
+env:
+  shell: /bin/sh
+  git-credential-helper: no
+
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      dotnet: 8.0
+    commands:
+      - sam --version
+      - cd ./Functions/DataConsistencyFunction/
+
+  build:
+    on-failure: ABORT
+    commands:
+      - sam build
+
+  post_build:
+    on-failure: ABORT
+    commands:
+      - sam package --output-template-file package-template.yaml
+
+artifacts:
+  base-directory: Functions/DataConsistencyFunction
+  files:
+    - package-template.yaml
