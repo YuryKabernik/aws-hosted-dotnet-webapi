@@ -2,26 +2,40 @@ version: 0.2
 
 env:
   shell: /bin/sh
-  git-credential-helper: no
+  git-credential-helper: 'no'
 
 phases:
   install:
     on-failure: ABORT
     runtime-versions:
-      dotnet: 8.0
+      dotnet: 8
     commands:
       - sam --version
+      - dotnet --version
+
+  pre_build:
+    on-failure: ABORT
+    
+    # Change the current root to the function's root directory
+    # This is required as CodeBuild runs from the repository root directory by default
+    commands:
       - cd ./Functions/DataConsistencyFunction/
 
   build:
     on-failure: ABORT
     commands:
-      - sam build
+      - >
+        sam build
+        --config-file samconfig.toml
+        --template-file template.yaml
+        --output-template-file ./.aws-sam/package-template.yaml
 
   post_build:
     on-failure: ABORT
     commands:
-      - sam package --output-template-file package-template.yaml
+      - >
+        sam package
+        --output-template-file package-template.yaml
 
 artifacts:
   base-directory: Functions/DataConsistencyFunction

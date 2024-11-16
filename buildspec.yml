@@ -11,19 +11,24 @@ phases:
       dotnet: 8.0
     commands:
       - sam --version
+      - dotnet --version
 
   build:
     on-failure: ABORT
     commands:
-      - dotnet build -c Release
-      - > 
+      - dotnet build --configuration Release
+      - >
         sam build
-        --template-file ./Functions/S3LogsFunction/template.yaml
-        --build-dir ./Functions/S3LogsFunction/.aws-sam
+        --template-file ./Functions/DataConsistencyFunction/template.yaml
+        --build-dir ./Functions/DataConsistencyFunction/.aws-sam
       - >
         sam build
         --template-file ./Functions/LambdaSnsSqsNotification/template.yaml
         --build-dir ./Functions/LambdaSnsSqsNotification/.aws-sam
+      - > 
+        sam build
+        --template-file ./Functions/S3LogsFunction/template.yaml
+        --build-dir ./Functions/S3LogsFunction/.aws-sam
 
   post_build:
     on-failure: ABORT
@@ -31,15 +36,21 @@ phases:
       - >
         sam package
         --config-file ../samconfig.toml
-        --template-file ./Functions/S3LogsFunction/.aws-sam/template.yaml
-        --output-template-file ./Functions/S3LogsFunction/.aws-sam/package-template.yaml
+        --template-file ./Functions/DataConsistencyFunction/.aws-sam/template.yaml
+        --output-template-file ./Functions/DataConsistencyFunction/.aws-sam/package-template.yaml
+      - >
+        sam package
+        --config-file ../samconfig.toml 
+        --template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/template.yaml
+        --output-template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/package-template.yaml
       - >
         sam package
         --config-file ../samconfig.toml
-        --template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/template.yaml
-        --output-template-file ./Functions/LambdaSnsSqsNotification/.aws-sam/package-template.yaml
+        --template-file ./Functions/S3LogsFunction/.aws-sam/template.yaml
+        --output-template-file ./Functions/S3LogsFunction/.aws-sam/package-template.yaml
 
 artifacts:
   files:
-    - ./Functions/S3LogsFunction/.aws-sam/package-template.yaml
+    - ./Functions/DataConsistencyFunction/.aws-sam/package-template.yaml
     - ./Functions/LambdaSnsSqsNotification/.aws-sam/package-template.yaml
+    - ./Functions/S3LogsFunction/.aws-sam/package-template.yaml

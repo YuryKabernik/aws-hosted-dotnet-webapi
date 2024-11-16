@@ -11,17 +11,31 @@ phases:
       dotnet: 8.0
     commands:
       - sam --version
+      - dotnet --version
+
+  pre_build:
+    on-failure: ABORT
+    
+    # Change the current root to the function's root directory
+    # This is required as CodeBuild runs from the repository root directory by default
+    commands:
       - cd ./Functions/LambdaSnsSqsNotification/
 
   build:
     on-failure: ABORT
     commands:
-      - sam build
+      - >
+        sam build
+        --config-file samconfig.toml
+        --template-file template.yaml
+        --output-template-file ./.aws-sam/package-template.yaml
 
   post_build:
     on-failure: ABORT
     commands:
-      - sam package --output-template-file package-template.yaml
+      - >
+        sam package
+        --output-template-file package-template.yaml
 
 artifacts:
   base-directory: Functions/LambdaSnsSqsNotification
