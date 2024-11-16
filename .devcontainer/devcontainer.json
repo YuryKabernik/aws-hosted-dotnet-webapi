@@ -35,7 +35,7 @@
       "settings": {
         "yaml.schemas": {
           "https://raw.githubusercontent.com/aws/serverless-application-model/main/samtranslator/schema/schema.json": [
-            "${containerWorkspaceFolder}/aws/templates/*.yaml"
+            "${containerWorkspaceFolder}/aws/templates/**/*.yaml"
           ]
         }
       },
