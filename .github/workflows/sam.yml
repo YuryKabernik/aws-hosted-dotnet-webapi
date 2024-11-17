@@ -1,6 +1,7 @@
 name: AWS Serverless Application Model
 
-on: 
+on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
     paths:

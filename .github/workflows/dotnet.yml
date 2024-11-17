@@ -16,7 +16,6 @@ on:
     paths:
       - Webapi/**
       - Functions/**
-    
 
 jobs:
   build:
