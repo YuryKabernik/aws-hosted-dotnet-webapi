@@ -1,0 +1,37 @@
+name: AWS Serverless Application Model
+
+on: 
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'Functions/DataConsistencyFunction/**'
+
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'Functions/DataConsistencyFunction/**'
+
+defaults:
+  run:
+    working-directory: 'Functions/DataConsistencyFunction'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Validate template
+        run: sam validate --template-file template.yaml
+
+      - name: Build application
+        run: sam build --output-template-file .aws-sam/package-template.yaml
