@@ -33,6 +33,10 @@
   "customizations": {
     "vscode": {
       "settings": {
+        "[github-actions-workflow]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 2
+        },
         "yaml.schemas": {
           "https://raw.githubusercontent.com/aws/serverless-application-model/main/samtranslator/schema/schema.json": [
             "${containerWorkspaceFolder}/aws/templates/**/*.yaml"
