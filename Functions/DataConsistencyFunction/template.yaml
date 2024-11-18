@@ -27,11 +27,17 @@ Parameters:
     Type: String
     Description: PostgresSQL password for database connection.
     Default: Mwb5KIdk4igOpUlpbsCV
+    NoEcho: true
 
   LambdaDataConsistencyRoleParameter:
     Type: String
     Description: Allows Lambda functions to call RDS and S3 services to synchronize images and metadata
     Default: arn:aws:iam::905418123070:role/CloudX-LambdaConsistencyRole
+
+  VpcIdParameter:
+    Type: String
+    Description: Allows to specify a custom VPC to create resources in
+    Default: vpc-045167d8423e6122e
 
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
@@ -62,6 +68,90 @@ Resources:
           - !Ref PrivateSubnetAYury
           - !Ref PrivateSubnetBYury
 
+  # Private Subnet Routing
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VpcIdParameter
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PrivateRouteTable
+        - Key: project
+          Value: cloudx
+
+  PrivateSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetAYury
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetBYury
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetAYury:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VpcIdParameter
+      CidrBlock: 10.0.13.0/24
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PrivateSubnet-A
+        - Key: project
+          Value: cloudx
+
+  PrivateSubnetBYury:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VpcIdParameter
+      CidrBlock: 10.0.14.0/24
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: dotnet-webapi-PrivateSubnet-B
+        - Key: project
+          Value: cloudx
+
+  # Security Groups
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda function
+      VpcId: !Ref VpcIdParameter
+
+  SecurityGroupIngressPostgresSql:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref LambdaSecurityGroup
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda function
+      VpcId: !Ref VpcIdParameter
+
+  SecurityGroupEgressLambdaGroup:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref LambdaSecurityGroup
+      IpProtocol: "tcp"
+      FromPort: 0
+      ToPort: 65535
+      CidrIp: 0.0.0.0/0
+
   # S3 bucket
   ImagesBucket:
     Type: AWS::S3::Bucket
@@ -75,7 +165,7 @@ Resources:
   S3GatewayEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      VpcId: !Ref VPCYury
+      VpcId: !Ref VpcIdParameter
       VpcEndpointType: "Gateway"
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
       RouteTableIds:
