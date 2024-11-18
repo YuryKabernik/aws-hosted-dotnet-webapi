@@ -10,7 +10,7 @@ Description: >-
 # Transform section specifies one or more macros that AWS CloudFormation uses to process your template
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
 Transform:
-- AWS::Serverless-2016-10-31
+  - AWS::Serverless-2016-10-31
 
 # Objects that are declared in the Parameters section cause the sam deploy --guided command to present additional prompts to the user.
 Parameters:
@@ -197,8 +197,8 @@ Resources:
       StorageType: gp3
       AllocatedStorage: "20"
       DBInstanceIdentifier: database-1
-      MasterUsername: !Ref DatabaseUserNameParameter
-      MasterUserPassword: !Ref DatabaseUserPasswordParameter
+      MasterUserSecret:
+        KmsKeyId: !Ref DBSecretPassword
       AutoMinorVersionUpgrade: false
       DeleteAutomatedBackups: true
       PubliclyAccessible: false
@@ -209,6 +209,25 @@ Resources:
         - !GetAZs ""
       VPCSecurityGroups:
         - !Ref DatabaseSecurityGroup
+
+  DBSecretPassword:
+    Type: "AWS::KMS::Key"
+    DeletionPolicy: Delete
+    Properties:
+      Description: KMS key for PostgreSQL database
+      EnableKeyRotation: True
+      KeyPolicy:
+        Version: "2012-10-17"
+        Id: !Ref "AWS::StackName"
+        Statement:
+          - Sid: "Allow administration of the key"
+            Effect: "Allow"
+            Principal:
+              AWS:
+                Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource: "*"
 
   # AWS Event
 
