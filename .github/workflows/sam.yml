@@ -35,4 +35,4 @@ jobs:
         run: sam validate --template-file template.yaml
 
       - name: Build application
-        run: sam build --output-template-file .aws-sam/package-template.yaml
+        run: sam build --template-file template.yaml
